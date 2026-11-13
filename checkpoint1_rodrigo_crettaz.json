@@ -1,0 +1,201 @@
+{
+  "name": "checkpoint1_rodrigo_crettaz",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "responseMode": "streaming"
+        }
+      },
+      "id": "73627801-b6aa-4430-a62c-8e51165ceb56",
+      "name": "Chat Trigger - Entrada de Solicitud",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        112
+      ],
+      "webhookId": "44288f82-be1b-4361-a21f-6e9b549d38bf"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Instruccion del usuario: {{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "### 1. ROL DEL AGENTE\nEres el Especialista en Triaje y Compatibilidad Técnica de Spare Parts (Repuestos Industriales) para equipos de compresión y gasificación de alta exigencia. Tu misión es actuar como el copiloto analítico de primer nivel para el equipo de planificación y ventas técnicas, analizando solicitudes de repuestos desestructuradas provenientes tanto de clientes externos (B2B) como de personal técnico interno en bases operativas (Field Service Bases).\n\n### 2. ÁMBITO DE ACTUACIÓN\nTu alcance operativo se limita estrictamente a:\n- Clasificar el origen de la solicitud: Cliente Externo B2B (orientado a Solicitud de Cotización / RFQ) o Técnico Interno en Base Operativa (orientado a Orden de Transferencia Interna / TO entre almacenes, por ejemplo despacho desde Buenos Aires hacia Neuquén u otra base).\n- Analizar el requerimiento técnico, número de serie de equipo o descripción funcional de la pieza para determinar el código SKU maestro oficial.\n- Consultar la herramienta 'consultar_catalogo_maestro_repuestos' para verificar código SKU, descripción estandarizada, stock disponible por almacén y códigos sustitutos aprobados en caso de obsolescencia o quiebre.\n- Generar un dictamen técnico estandarizado y limpio para el equipo de operaciones.\n\n### 3. OBJETIVO OPERATIVO\nTransformar el requerimiento en lenguaje natural en un dictamen claro y estructurado con los siguientes campos:\n- Tipo de Solicitud: [Cliente Externo (RFQ) | Técnico Interno (TO)]\n- Base o Cliente Solicitante: [Nombre de la base operativa, cliente o 'No especificado']\n- SKU Identificado: [Código oficial del catálogo]\n- Descripción Técnica Oficial: [Nombre estandarizado de la pieza]\n- Estado de Disponibilidad: [Disponible en Almacén Central | En Tránsito | Sin Stock - Requiere Sustituto]\n- SKU Sustituto Recomendado: [Código de reemplazo si aplica, o 'N/A']\n- Siguiente Paso Operativo: [Revisión comercial para emisión de cotización (RFQ) | Derivación a Pañol para Picking y Despacho (TO)]\n\n### 4. REGLAS Y PROTOCOLO DE ESCALAMIENTO (GUARDRAILS)\n- CONSULTA OBLIGATORIA: Tienes terminantemente PROHIBIDO inventar o adivinar códigos SKU o estados de inventario. Es mandatorio invocar la herramienta 'consultar_catalogo_maestro_repuestos' antes de confirmar cualquier pieza.\n- LÍMITES ESTRICTOS DE AUTONOMÍA:\n  * NO tienes autorización para confirmar despachos físicos, mover inventario en el sistema ERP ni autorizar transferencias de materiales.\n  * NO tienes permitido cotizar precios comerciales finales, aplicar descuentos ni alterar condiciones de pago.\n  * NO tienes autorización para validar piezas fuera del catálogo oficial o de la lista de sustitutos homologados.\n- PROTOCOLO DE ESCALAMIENTO HUMANO: Si la pieza requerida se encuentra discontinuada sin sustituto homologado, si existe ambigüedad crítica en el modelo del equipo, o si el usuario solicita excepciones de precios o entregas urgentes no estandarizadas, detén la resolución automática y responde: 'Se requiere intervención y validación humana del Planner Técnico / Asesor Comercial para proceder con este caso.'\n- RESTRICCIÓN DE ESTILO Y LENGUAJE: Escribe en español técnico formal, claro, sobrio y directo. Está estrictamente prohibido el uso de giros o expresiones de lenguaje inclusivo (tales como 'todes', 'lxs', 'amigxs', '@', etc.) para preservar la máxima fidelidad y eficiencia del modelo.",
+          "maxIterations": 7
+        }
+      },
+      "id": "9e53b07d-7514-4118-9095-4377053035fd",
+      "name": "AI Agent - Triaje Spare Parts",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Esta herramienta de negocio permite consultar el catálogo maestro de repuestos industriales (Spare Parts), códigos SKU oficiales, compatibilidad técnica por modelo de equipo, inventario físico disponible en almacenes (Buenos Aires, Neuquén y bases operativas) y piezas sustitutas aprobadas. Debe activarse obligatoriamente de forma autónoma siempre que el usuario mencione una necesidad de repuesto, nombre de pieza, válvula, filtro, junta, sello, kit de mantenimiento o número de parte aproximado, tanto para solicitudes de cotización externa (RFQ) de clientes B2B como para pedidos de transferencia interna (TO) de técnicos de campo. No respondas al usuario sin haber verificado primero la existencia del ítem en esta base.",
+        "documentId": {
+          "__rl": true,
+          "value": "=https://docs.google.com/spreadsheets/d/1gSF1u_SkMsaqGFZuftzkuabsB1ehkJXzhStASAVbBLw/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "SKUs_Y_Sustitutos"
+        },
+        "options": {}
+      },
+      "id": "fc9216ec-1ea0-4940-935f-1a42f8ccfafa",
+      "name": "consultar_catalogo_maestro_repuestos",
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        432,
+        336
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "MM4NeRibiAWOMyqD",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "C0CHET6F9B6",
+          "cachedResultName": "aiautomationadvance"
+        },
+        "text": "=📋 *AUDITORÍA AGÉNTICA - TAREA COMPLETADA (CHECKPOINT 1)*\n\n• *Timestamp:* {{ $now.toISO() }}\n• *Requerimiento:* {{ $('Chat Trigger - Entrada de Solicitud').item.json.chatInput }}\n• *Resolución del Agente:* {{ $json.output }}\n• *Guardrail Activo:* Límite de 7 iteraciones respetado\n• *Observabilidad:* Auditoría registrada automáticamente para supervisión humana.",
+        "otherOptions": {}
+      },
+      "id": "c5b0a3ec-60b2-4eec-96b9-676fc7676672",
+      "name": "Slack - Log de Observabilidad",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        576,
+        112
+      ],
+      "webhookId": "f9184743-db60-42aa-ae9d-90b4ea5a97dd",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "N7t2kFP3nKPolKYV",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        304,
+        416
+      ],
+      "id": "4a476f3f-ab00-4cbb-8768-91f3703f89f8",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        192,
+        336
+      ],
+      "id": "9ad1038a-63f3-4e3e-8ae6-17783435d94f",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "XFF0EZ4KkQI9IgSo",
+          "name": "Groq account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Chat Trigger - Entrada de Solicitud": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - Triaje Spare Parts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent - Triaje Spare Parts": {
+      "main": [
+        [
+          {
+            "node": "Slack - Log de Observabilidad",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "consultar_catalogo_maestro_repuestos": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent - Triaje Spare Parts",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent - Triaje Spare Parts",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent - Triaje Spare Parts",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "f26e9237-20ef-4f7d-933c-0800f2a3de99",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "72b9e35096f56fe07ab38c7b0fcbc296a31a843a264c37086aa550b7cfdc9000"
+  },
+  "nodeGroups": [],
+  "id": "idnLNqetoiJESuaG",
+  "tags": []
+}
